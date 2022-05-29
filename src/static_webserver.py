@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# benötigte Bibliotheken/Klassen/Funktionen implementieren
+#https://stackoverflow.com/questions/22139193/cant-get-tornado-staticfilehandler-to-work
 import time
 import tornado.ioloop
 import tornado.web
@@ -21,7 +20,7 @@ class MainHandler(tornado.web.RequestHandler):
         # schreibe Webseitenkontent
         self.render("upload.html")
 
-def write_webpage() -> str:
+def write_webpage() -> None:
     browser = get_camListValue('browser')
     browser.get_picture()
     content = "<img src=\"{}\" ".format(browser.path + browser.name + '.jpg') + "width=\"{}\" ".format(browser.width) + "height=\"{}\"".format(browser.height) + ">"
