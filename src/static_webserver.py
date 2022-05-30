@@ -1,73 +1,95 @@
 #https://stackoverflow.com/questions/22139193/cant-get-tornado-staticfilehandler-to-work
+import os
 import time
-import tornado.ioloop
-import tornado.web
-import tornado.httpserver
 from src.camera import *
+from os import curdir, sep
+from http.server import BaseHTTPRequestHandler,HTTPServer
 
-class Application(tornado.web.Application):
-    def __init__(self):
-        handlers = [
-            (r"/upload.html", MainHandler)
-        ]
-        settings = {
-            "template_path": "/home/phil/Uniprojekte/",
-        }
-        tornado.web.Application.__init__(self, handlers, **settings)
 
-class MainHandler(tornado.web.RequestHandler):
-    def get(self):
-        # schreibe Webseitenkontent
-        self.render("upload.html")
+#This class will handles any incoming request from
+#the browser
+class myHandler(BaseHTTPRequestHandler):
+
+    #Handler for the GET requests
+    def do_GET(self):
+        write_webpage()
+        browser = get_camListValue('browser')
+
+        if self.path.endswith('browser.jpg'):
+            self.path = '{}'.format(browser.path + browser.name + '.jpg')
+        elif self.path=="/":
+            self.path="src/upload.html"
+
+        try:
+            #Check the file extension required and
+            #set the right mime type
+
+            sendReply = False
+            if self.path.endswith(".html"):
+                mimetype='text/html'
+                sendReply = True
+            if self.path.endswith(".jpg"):
+                mimetype='image/jpg'
+                print('test')
+                sendReply = True
+            if self.path.endswith(".gif"):
+                mimetype='image/gif'
+                sendReply = True
+            if self.path.endswith(".js"):
+                mimetype='application/javascript'
+                sendReply = True
+            if self.path.endswith(".css"):
+                mimetype='text/css'
+                sendReply = True
+
+            if sendReply == True:
+                #Open the static file requested and send it
+                if mimetype == 'image/jpg':
+                    f = open(self.path, "rb")
+                else:
+                    f = open(curdir + sep + self.path, 'rb')
+                self.send_response(200)
+                self.send_header('Content-type',mimetype)
+                self.end_headers()
+                self.wfile.write(f.read())
+                f.close()
+                return
+        except IOError:
+            self.send_error(404,'File Not Found: %s' % self.path)
 
 def write_webpage() -> None:
+    """Schreibt die upload.html Datei in Abhängig des Speicherortes des Bildes."""
     browser = get_camListValue('browser')
     browser.get_picture()
     content = "<img src=\"{}\" ".format(browser.path + browser.name + '.jpg') + "width=\"{}\" ".format(browser.width) + "height=\"{}\"".format(browser.height) + ">"
-
-    # aktuelle Systemzeit abrufen und formatieren
     timeinfo = "Uhrzeit: " + time.strftime("%d.%m.%Y - %H:%M:%S h")
     page = "<!DOCTYPE html>\
             <html>\
             <head>\
-            <title>\"Embedded Systems Projektarbeit\"</title>\
+            <title>Embedded Systems Projektarbeit</title>\
             </head>\
             <body>\
-            <center><h1>\"Embedded Systems Projektarbeit\"</h1></center>\
+            <center><h1>Embedded Systems Projektarbeit</h1></center>\
             <center>" + content + "</center>\
             <center>" + timeinfo + "</center>\
             </body>\
             </html>"
-    with open('./src/upload.html', 'w') as f:
+
+    filePath = r'./src/upload.html'
+    with open(filePath, 'w') as f:
         f.write(page)
 
-# verbinde MainHandler mit App
+
 def start_static_webserver():
-    write_webpage()
+    """Startet den Webbrowser und wartet auf einkommende Anfragen unter PORT_NUMBER"""
+    PORT_NUMBER = 8080
+
     try:
-        """
-        applicaton = Application()
-        http_server = tornado.httpserver.HTTPServer(applicaton)
-        http_server.listen(8081)
+    	server = HTTPServer(('', PORT_NUMBER), myHandler)
+    	print('Started httpserver on port {}'.format(PORT_NUMBER))
 
-        #tornado.ioloop.IOLoop.instance().start()
-        tornado.ioloop.IOLoop.current().start()
-
-
-        browser = get_camListValue('browser')
-        #static_path = os.path.join(os.path.dirname(__file__),"static"))
-        app = tornado.web.Application([
-            (   r'/', MainHandler),
-            (   r'/(.*)', \
-               tornado.web.StaticFileHandler, \
-               {'path':r'/home/phil/Uniprojekte/Lab4'}),
-        ])
-        """
-        applicaton = Application()
-        app = tornado.web.Application(applicaton)
-        app.listen(8081)
-        tornado.ioloop.IOLoop.current().start()
+    	server.serve_forever()
 
     except KeyboardInterrupt:
-        tornado.ioloop.IOLoop.current().stop()
-        #tornado.ioloop.IOLoop.instance().stop()
+    	print(' received, shutting down the web server')
+    	server.socket.close()

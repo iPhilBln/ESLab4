@@ -7,7 +7,7 @@ import picamera.array
 import multiprocessing
 import numpy as np
 
-class Camerasettings(picamera.PiCamera):
+class Camerasettings(object):
     """
         Objekte zum Erstellen verschiedener Kameraoptionen
         Klassenattribute:   cameraInUse : bool
@@ -16,7 +16,7 @@ class Camerasettings(picamera.PiCamera):
                             width : int
                             height : int
                             rotation : int
-                            effect : str
+                            image_effect : str
     """
 
     #Klassenattribute
@@ -28,7 +28,7 @@ class Camerasettings(picamera.PiCamera):
                         width: int = None,
                         height: int = None,
                         rotation: int = None,
-                        effect: str = None):
+                        image_effect: str = None):
 
         if type(name) is str: self.set_name(name)
         else: self.set_name('unkown')
@@ -45,8 +45,8 @@ class Camerasettings(picamera.PiCamera):
         if type(rotation) is int: self.set_rotation(rotation)
         else: self.set_rotation(180)
 
-        if type(effect) is str: self.set_effect(effect)
-        else: self.set_effect("none")
+        if type(image_effect) is str: self.set_image_effect(image_effect)
+        else: self.set_image_effect("none")
 
     #GETTER, SETTER, DELETER Methoden
     #Attribut: name
@@ -99,43 +99,57 @@ class Camerasettings(picamera.PiCamera):
         del self._rotation
     rotation = property(get_rotation, set_rotation, del_rotation)
 
-    #Attribut: effect
-    def get_effect(self):
-        return self._effect
-    def set_effect(self, effect: str):
-        self._effect = effect
-    def del_effect(self):
-        del self._effect
-    effect = property(get_effect, set_effect, del_effect)
+    #Attribut: image_effect
+    def get_image_effect(self):
+        return self._image_effect
+    def set_image_effect(self, image_effect: str):
+        self._image_effect = image_effect
+    def del_image_effect(self):
+        del self._image_effect
+    image_effect = property(get_image_effect, set_image_effect, del_image_effect)
 
 #Override Methoden
     #Ausgabemethode für das Objekt überschreiben
     def __str__(self) -> str:
+        """
+            Überschreibt die Ausgabe des Objekts, um die Eigenschaften auszugeben.
+        """
+
         return  "Name: " + str(self._name) + "\n" +\
                 "Path: " + str(self._path) + "\n" +\
                 "Width: " + str(self._width) + "\n" +\
                 "Hight: " + str(self._height) + "\n" +\
                 "Rotation: " + str(self._rotation) + "\n" +\
-                "Effect: " + str(self._effect)
+                "Effect: " + str(self._image_effect)
 
 #Klassenmethoden
     #alle möglichen Kameraeffekte ausgeben
     @staticmethod
     def print_effects() -> "str : Listet alle Effekte auf":
+        """
+            Listet alle möglichen Kameraeffekte auf.
+        """
+
         with picamera.PiCamera() as camera:
-            strEffekte : str = "Diese Effekte stehen zur Auswahl:"
+            strEffekte : str = "\nDiese Effekte stehen zur Auswahl:"
             for effectName in camera.IMAGE_EFFECTS:
-                strEffekte += "\n\t" + effectName
+                strEffekte += '\n\t' + effectName
+            strEffekte += '\n'
             camera.close()
             return strEffekte
 
 #Kamerafunktionen
     def get_picture(self) -> "Fotoaufnahme":
+        """
+            Methode mit der ein Foto für das jeweilige Objekt erstellt werden kann.
+            Es werden dann die zuvor eingestellt Presets verwendet.
+        """
         if not Camerasettings.cameraInUse:
+
             Camerasettings.cameraInUse = True
             with picamera.PiCamera(resolution = (self._width, self._height)) as camera:
                 camera.rotation = self._rotation
-                camera.image_effect = self._effect
+                camera.image_effect = self._image_effect
                 try:
                     camera.start_preview()
                     time.sleep(0.75)
@@ -181,6 +195,30 @@ def enable_motionDetector(timeInSeconds : int):
         except KeyboardInterrupt:
             camera.stop_recording()
 
+def init_camSettings() -> None:
+    """
+        Legt 3 verschiedene Kameraeinstellungen an:
+            - 2x für Telegram
+            - 1x für Browser
+    """
+    name : str = "telegram"
+    path : str = "/home/phil/Uniprojekte/Lab4/Applications"
+    telegram: Camerasettings = Camerasettings(name, path)
+    set_camListValue(telegram)
+
+    name : str = "telegram_oil"
+    path : str = "/home/phil/Uniprojekte/Lab4/Applications"
+    effekt : str = 'sketch'
+    telegram_sketch: Camerasettings = Camerasettings(name, path, None, None, None, effekt)
+    set_camListValue(telegram_sketch)
+
+    name : str = "browser"
+    path : str = "/home/phil/Uniprojekte/Lab4/Applications"
+    width : int = 640
+    height : int = 480
+    browser : Camerasettings = Camerasettings(name, path, width, height)
+    set_camListValue(browser)
+
 """
     alle angelegten Kameraeinstellungen werden in einer Liste gespeichert,
     Funktionen um die Liste zu bearbeiten:
@@ -193,31 +231,41 @@ def enable_motionDetector(timeInSeconds : int):
 
 camList : list = []
 
-def init_camList():
-    """Initilisiert die Liste mit den Kameraeinstellungen."""
+def init_camList() -> None:
+    """
+        Initilisiert die Liste mit den Kameraeinstellungen.
+    """
     print("\nDie Objekliste wird Intialisiert...")
     camList.clear()
     print("Die Kameraliste wurde erfolgreich zurückgesetzt.\n")
 
 def get_camList() -> list:
-    """Gibt alle angelegten Kameraeinstellungen zurück."""
+    """
+        Gibt alle angelegten Kameraeinstellungen zurück.
+    """
     return camList
 
-def get_camListValue(name : str ) -> list:
-    """Such ein bestimmtes Objekt in der Liste mit den Kameraeinstellungen."""
+def get_camListValue(name : str ) -> object:
+    """
+        Such ein bestimmtes Objekt in der Liste mit den Kameraeinstellungen.
+    """
     for obj in camList:
         if obj.name == name:
             return obj
     print('Das gesuchte Objekt war nicht in der Liste vorhanden.')
     return -1
 
-def set_camListValue(obj : Camerasettings):
-    """Fügt ein Objekt zur Liste mit den Kemaraeinstellungen hinzu."""
+def set_camListValue(obj : Camerasettings) -> None:
+    """
+        Fügt ein Objekt zur Liste mit den Kemaraeinstellungen hinzu.
+    """
     camList.append(obj)
     print(obj.name + " wurde erfolgreich zur Kameraliste hinzugefügt.")
 
 
-def del_camListValue(obj : Camerasettings):
-    """Löscht ein Objekt aus der Liste mit den Kameraeinstellungen."""
+def del_camListValue(obj : Camerasettings) -> None:
+    """
+        Löscht ein Objekt aus der Liste mit den Kameraeinstellungen.
+    """
     camList.remove(obj)
     print(obj.name + " wurde erfolgreich von der Kameraliste gelöscht.")

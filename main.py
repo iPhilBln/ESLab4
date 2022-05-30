@@ -15,38 +15,35 @@ from src.static_webserver import *
 def main():
     """
         1. Initialisierung des PIR Sensors
-        2. Initialisierung der Objektliste
-        3. Initialisierung des Telegram Bots
+        2. Initialisierung der Objektlisten
+        3. Initialisierung der Telegram Bots
         4. Initialisierung der Objekte mit den jeweiligen
            Kameraeinstellungen
     """
 
+    #1.
     pinNumberPIR : int  = 4
     init_pir(pinNumberPIR)
 
+    #2.
     init_camList()
     init_botList()
 
+    #3.
     init_pirTelebot()
 
-    name : str = "telegram"
-    path : str = "/home/phil/Uniprojekte/Lab4/Applications"
-    telegram: Camerasettings = Camerasettings(name, path)
-    set_camListValue(telegram)
-
-    name : str = "browser"
-    path : str = "/home/phil/Uniprojekte/Lab4/Applications"
-    width : int = 640
-    height : int = 480
-    browser : Camerasettings = Camerasettings(name, path, width, height)
-    set_camListValue(browser)
+    #4.
+    init_camSettings()
 
     list = get_camList()
     for obj in list:
         print()
         print(obj)
 
+    print(Camerasettings.print_effects())
+
     start_static_webserver()
+    
     while True:
         try:
             time.sleep(60)

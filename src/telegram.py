@@ -59,6 +59,7 @@ class MyBots(object):
         self.bot.sendPhoto(self._id, photo=open(f'{photopath}', 'rb'))
 
 def init_pirTelebot() -> None:
+    """legt einen Telegrambot für den PIR Sensor an."""
     token : str = ''
     id : int = None
 
@@ -82,13 +83,13 @@ def init_pirTelebot() -> None:
                 time.sleep(1)
         except Exception as err:
             print('Fehler: ' + str(err))
-        finally:
-            print('ID: ' + str(id))
-            print()
-            pirBot = MyBots('pirBot', token, id)
-            set_botListValue(pirBot)
-            pirBot.send_message('PIR: System online!')
-            break
+
+    print('ID: ' + str(id))
+    print()
+    pirBot = MyBots('pirBot', token, id)
+    set_botListValue(pirBot)
+    pirBot.send_message('PIR: System online!')
+
 
 """
     alle angelegten Telegrambots werden in einer Liste gespeichert,
@@ -103,14 +104,23 @@ def init_pirTelebot() -> None:
 botList : list = []
 
 def init_botList() -> None:
+    """
+        Initilisiert die Liste mit den Telegrambots
+    """
     print("\nDie Botliste wird Intialisiert...")
     botList.clear()
     print("Die Botliste wurde erfolgreich zurückgesetzt.\n")
 
 def get_botList() -> list:
+    """
+        Gibt alle angelegten Telegrambots zurück.
+    """
     return botList
 
-def get_botListValue(name : str ) -> list:
+def get_botListValue(name : str ) -> object:
+    """
+        Such ein bestimmtes Objekt in der Liste mit den Telegrambots.
+    """
     for obj in botList:
         if obj.name == name:
             return obj
@@ -118,9 +128,15 @@ def get_botListValue(name : str ) -> list:
     return -1
 
 def set_botListValue(obj : MyBots) -> None:
+    """
+        Fügt ein Objekt zur Liste mit den Telegrambots hinzu.
+    """
     botList.append(obj)
     print(obj.name + " wurde erfolgreich zur Botliste hinzugefügt.")
 
-def del_objListValue(obj : MyBots):
+def del_objListValue(obj : MyBots) -> None:
+    """
+        Löscht ein Objekt aus der Liste mit den Telegrambots.
+    """
     botList.remove(obj)
     print(obj.name + " wurde erfolgreich von der Botliste gelöscht.")
