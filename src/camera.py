@@ -170,7 +170,7 @@ class Camerasettings(object):
             print("Die Kamera wird aktuell verwendet.")
 
 class MyMotionDetector(picamera.array.PiMotionAnalysis):
-
+    """Klasse mit der auch eine optische Bewegungserkennung implementiert werden könnte."""
     motionDetectionEnable : bool = True
 
     def analyse(self, a):
@@ -206,7 +206,7 @@ def init_camSettings() -> None:
     telegram: Camerasettings = Camerasettings(name, path)
     set_camListValue(telegram)
 
-    name : str = "telegram_oil"
+    name : str = "telegram_sketch"
     path : str = "/home/phil/Uniprojekte/Lab4/Applications"
     effekt : str = 'sketch'
     telegram_sketch: Camerasettings = Camerasettings(name, path, None, None, None, effekt)
